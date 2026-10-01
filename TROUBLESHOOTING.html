@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="Reply Desk documentation: Troubleshooting. Setup, email workflows, API, privacy and screenshots.">
+<title>Troubleshooting · Reply Desk Docs</title><link rel="stylesheet" href="site.css"></head>
+<body><header><a class="brand" href="index.html"><span class="mark">r.</span> replydesk <span class="docs-label">DOCS</span></a><a class="repo" href="https://github.com/alizainappedology/reply-desk">GitHub repository ↗</a></header>
+<div class="layout"><aside class="sidebar"><div class="section-label">DOCUMENTATION</div><label class="search"><span class="sr-only">Search guide titles</span><input id="search" type="search" placeholder="Find a guide…" autocomplete="off"></label><nav aria-label="Documentation"><a href="index.html" class="" data-guide="overview">Overview</a><a href="USER_GUIDE.html" class="" data-guide="user guide">User guide</a><a href="SCREENSHOTS.html" class="" data-guide="screenshots">Screenshots</a><a href="ARCHITECTURE.html" class="" data-guide="architecture">Architecture</a><a href="API.html" class="" data-guide="api reference">API reference</a><a href="DEVELOPMENT.html" class="" data-guide="development">Development</a><a href="SECURITY.html" class="" data-guide="privacy &amp; security">Privacy &amp; security</a><a href="TROUBLESHOOTING.html" class="active" data-guide="troubleshooting">Troubleshooting</a></nav><div class="local-note"><strong>Built for a calmer inbox.</strong><p>FastAPI · React · Local AI</p><span>Review every reply before sending.</span></div></aside>
+<main><div class="breadcrumb">Documentation <span>/</span> Troubleshooting</div><article><h1 id="troubleshooting">Troubleshooting</h1>
+<p><a href="index.html">Back to README</a></p>
+<table>
+<thead>
+<tr>
+<th>Symptom</th>
+<th>What to check</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Gmail authentication or mailbox request failed</td>
+<td>Correct account, current app password, Google Workspace IMAP policy, and allowed client access</td>
+</tr>
+<tr>
+<td>IMAP access is disabled</td>
+<td>Ask the Workspace administrator to enable permitted IMAP access for your account</td>
+</tr>
+<tr>
+<td>App passwords are unavailable</td>
+<td>Check Google 2-Step Verification and organizational policy; not every account supports them</td>
+</tr>
+<tr>
+<td>Enter Gmail address, app password, and local model</td>
+<td>Fill both credential fields; keep model as <code>llama3.2:3b</code>; refresh after updates</td>
+</tr>
+<tr>
+<td>All Mail visibility error</td>
+<td>Enable All Mail visibility in Gmail IMAP settings, or disable conversation context</td>
+</tr>
+<tr>
+<td>Local AI is not running</td>
+<td>Run <code>start.ps1</code>; check <code>.local-ai/server-error.log</code> if startup fails</td>
+</tr>
+<tr>
+<td>Ollama running but model missing</td>
+<td>Run <code>setup-local-ai.ps1</code> again to download the model</td>
+</tr>
+<tr>
+<td>Generation is slow</td>
+<td>First loading and CPU inference can take minutes; wait or use Short replies and less context</td>
+</tr>
+<tr>
+<td>AI did not finish a draft</td>
+<td>Try Short length and narrower instructions; incomplete/length-limited output is rejected</td>
+</tr>
+<tr>
+<td>Reply differs from intent</td>
+<td>Use an explicit decision, specific notes, or exact-text instruction; inspect and edit before sending</td>
+</tr>
+<tr>
+<td>Frontend build missing / 503</td>
+<td>Run <code>setup-app.ps1</code> or <code>npm run build</code> inside frontend</td>
+</tr>
+<tr>
+<td>Browser shows an older interface</td>
+<td>Refresh; rebuild frontend after source edits and use port 8765 rather than Apache</td>
+</tr>
+<tr>
+<td>Reload the app and try again / 403</td>
+<td>Backend token changed; refresh. Use localhost or 127.0.0.1 on port 8765</td>
+</tr>
+<tr>
+<td>Login appears lost after reload</td>
+<td>Current UI connection state resets on reload; reconnect. Server restarts also clear credentials</td>
+</tr>
+<tr>
+<td>Saved draft missing or save timed out</td>
+<td>Inspect Gmail Drafts before retrying; Gmail saves create new drafts</td>
+</tr>
+<tr>
+<td>Send could not be confirmed</td>
+<td>Inspect Gmail Sent before retrying; SMTP restrictions, network errors, or timeouts can cause uncertainty</td>
+</tr>
+<tr>
+<td>This send request was already attempted</td>
+<td>The process has recorded that ID; check Gmail Sent rather than blindly resending</td>
+</tr>
+<tr>
+<td>Local history/profile missing</td>
+<td>Use the same browser and site origin; localhost and 127.0.0.1 have separate storage</td>
+</tr>
+<tr>
+<td>Browser storage error</td>
+<td>Storage may be full or blocked; clear unnecessary site data after keeping any needed drafts</td>
+</tr>
+</tbody>
+</table>
+<h2 id="startup-and-ports">Startup and ports</h2>
+<p>The app uses port 8765 and Ollama uses 11434. If 8765 is occupied, stop the other Reply Desk instance before starting another. Do not run multiple backend workers: process-local credentials and tokens would be inconsistent.</p>
+<p>Use <code>start.ps1</code> from the project root. It expects <code>.venv\Scripts\python.exe</code> and <code>frontend\dist\index.html</code>; run <code>setup-app.ps1</code> if either is missing. On a fresh machine, run the local AI setup as well.</p>
+<p>Closing the backend terminal clears app credentials but may leave the separately launched Ollama process running. To stop Ollama, identify the project's process before stopping it; do not indiscriminately terminate unrelated AI instances.</p>
+<h2 id="diagnosing-gmail-access">Diagnosing Gmail access</h2>
+<p>A custom company address is not automatically a Gmail mailbox. Confirm that the account is hosted on Google Workspace. An app password cannot override a company's disabled IMAP or SMTP policy. Use an administrator-approved account and client configuration.</p>
+<p>Do not post passwords in issues or chat. Share only the visible error and the action that triggered it. The current UI intentionally uses a generic authentication error, so not all provider causes are distinguishable without a separate diagnostic.</p>
+<h2 id="developer-checks">Developer checks</h2>
+<pre><code class="language-powershell">.\.venv\Scripts\python.exe -m unittest discover -s tests -v
+cd frontend
+npm test
+npm run build
+</code></pre>
+<p>The current pinned Starlette test client may emit a deprecation warning about httpx. A warning is separate from a test failure; check the final test result. Dependency upgrades should be validated with the same route tests before changing the test client.</p></article><footer>Reply Desk documentation · <a href="https://github.com/alizainappedology/reply-desk">View source on GitHub</a></footer></main>
+<aside class="on-page"><div class="section-label">ON THIS PAGE</div><div class="toc">
+<ul>
+<li><a href="#troubleshooting">Troubleshooting</a><ul>
+<li><a href="#startup-and-ports">Startup and ports</a></li>
+<li><a href="#diagnosing-gmail-access">Diagnosing Gmail access</a></li>
+<li><a href="#developer-checks">Developer checks</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</aside></div><script src="site.js"></script></body></html>

@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="Reply Desk documentation: Architecture. Setup, email workflows, API, privacy and screenshots.">
+<title>Architecture · Reply Desk Docs</title><link rel="stylesheet" href="site.css"></head>
+<body><header><a class="brand" href="index.html"><span class="mark">r.</span> replydesk <span class="docs-label">DOCS</span></a><a class="repo" href="https://github.com/alizainappedology/reply-desk">GitHub repository ↗</a></header>
+<div class="layout"><aside class="sidebar"><div class="section-label">DOCUMENTATION</div><label class="search"><span class="sr-only">Search guide titles</span><input id="search" type="search" placeholder="Find a guide…" autocomplete="off"></label><nav aria-label="Documentation"><a href="index.html" class="" data-guide="overview">Overview</a><a href="USER_GUIDE.html" class="" data-guide="user guide">User guide</a><a href="SCREENSHOTS.html" class="" data-guide="screenshots">Screenshots</a><a href="ARCHITECTURE.html" class="active" data-guide="architecture">Architecture</a><a href="API.html" class="" data-guide="api reference">API reference</a><a href="DEVELOPMENT.html" class="" data-guide="development">Development</a><a href="SECURITY.html" class="" data-guide="privacy &amp; security">Privacy &amp; security</a><a href="TROUBLESHOOTING.html" class="" data-guide="troubleshooting">Troubleshooting</a></nav><div class="local-note"><strong>Built for a calmer inbox.</strong><p>FastAPI · React · Local AI</p><span>Review every reply before sending.</span></div></aside>
+<main><div class="breadcrumb">Documentation <span>/</span> Architecture</div><article><h1 id="architecture">Architecture</h1>
+<p><a href="index.html">Back to README</a></p>
+<h2 id="components">Components</h2>
+<pre><code class="language-mermaid">flowchart LR
+    Browser[React browser UI] --&gt;|JSON and process request token| API[FastAPI on 127.0.0.1:8765]
+    Browser --&gt; Storage[Browser localStorage]
+    API --&gt;|TLS IMAP 993| Gmail[Gmail mailbox]
+    API --&gt;|TLS SMTP 465| SMTP[Gmail sending]
+    API --&gt;|Local HTTP 11434| Ollama[Ollama / llama3.2:3b]
+    API --&gt; Assets[Built React assets]
+</code></pre>
+<p><code>server.py</code> serves both the API and React production build. FastAPI synchronous route handlers run blocking Gmail and model operations in worker threads. The app stays on one origin, so production does not require CORS.</p>
+<p>Ollama uses a separate background process. <code>local-ai.ps1</code> sets loopback binding, the project model directory, an 8192-token context setting, and disabled cloud functionality when starting that process. If an Ollama server already exists on port 11434, the script reuses it; its configuration is not changed.</p>
+<h2 id="source-map">Source map</h2>
+<table>
+<thead>
+<tr>
+<th>File</th>
+<th>Responsibility</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>server.py</code></td>
+<td>FastAPI routes, local-request middleware, IMAP reading, model generation, Gmail drafts, SMTP sends</td>
+</tr>
+<tr>
+<td><code>mailbox_features.py</code></td>
+<td>Search criteria, thread lookup through All Mail, option validation</td>
+</tr>
+<tr>
+<td><code>frontend/src/App.jsx</code></td>
+<td>React layout and controls, settings visibility, history expansion</td>
+</tr>
+<tr>
+<td><code>frontend/src/store.js</code></td>
+<td>Observable state, workflow actions, fetch calls, persistence</td>
+</tr>
+<tr>
+<td><code>frontend/src/styles.css</code></td>
+<td>Responsive SaaS interface styling</td>
+</tr>
+<tr>
+<td><code>frontend/src/main.jsx</code></td>
+<td>React root initialization</td>
+</tr>
+<tr>
+<td><code>frontend/vite.config.js</code></td>
+<td>Frontend builds, test environment, development API proxy</td>
+</tr>
+<tr>
+<td><code>setup-app.ps1</code></td>
+<td>Project virtual environment, dependency installation, production build</td>
+</tr>
+<tr>
+<td><code>setup-local-ai.ps1</code></td>
+<td>Portable Ollama runtime and model download</td>
+</tr>
+<tr>
+<td><code>local-ai.ps1</code></td>
+<td>Local AI environment and process startup</td>
+</tr>
+<tr>
+<td><code>start.ps1</code></td>
+<td>Start local AI, validate setup, run FastAPI</td>
+</tr>
+<tr>
+<td><code>tests/</code></td>
+<td>Backend service, feature, API, and sending tests</td>
+</tr>
+<tr>
+<td><code>frontend/src/App.test.jsx</code></td>
+<td>State and rendered React workflow tests</td>
+</tr>
+</tbody>
+</table>
+<h2 id="state-and-persistence">State and persistence</h2>
+<p>Backend state is process-global and intended for one local user:</p>
+<ul>
+<li><code>CONFIG</code>: connected email, app password, and model.</li>
+<li><code>TOKEN</code>: random process request token injected into the served HTML meta tag.</li>
+<li><code>SENDS</code>: attempted send IDs with pending, sent, or unknown outcomes.</li>
+<li><code>LOCK</code>: guards shared credential and send-state mutations.</li>
+</ul>
+<p>All are lost when the server restarts. Run one server process; multiple workers would have separate credentials, tokens, and send tracking.</p>
+<p>The React store exposes subscriptions through <code>useSyncExternalStore</code>. It stores messages, the selected email, editor text, filters, profile, versions, busy state, and batch state. Browser storage keys remain:</p>
+<ul>
+<li><code>replydesk.profile</code></li>
+<li><code>replydesk.drafts.&lt;mailbox&gt;</code></li>
+<li><code>replydesk.history.&lt;mailbox&gt;</code></li>
+</ul>
+<p>The mailbox namespace includes the email address and IMAP UIDVALIDITY. History retains the newest 200 versions. Browser state is not a database and has browser-dependent storage limits.</p>
+<h2 id="mail-flow">Mail flow</h2>
+<p>Each mailbox operation opens a fresh encrypted IMAP connection. Inbox fetches use read-only selection and <code>BODY.PEEK[]</code>. Search returns message UIDs and the app loads a 20-message page.</p>
+<p>Conversation lookup fetches <code>X-GM-THRID</code>, selects the special-use All Mail folder read-only, searches that thread ID, and reads its latest six messages. Inbox body text is bounded to 16,000 characters; each conversation entry is bounded to 3,500 characters.</p>
+<p>Generation sends untrusted mail context separately from owner instructions to local Ollama <code>/api/chat</code>. Draft, summary, and refinement tasks use different prompts. Generation is nonstreaming with a 300-second timeout. Short generation uses up to 512 output tokens; Detailed uses up to 900. Signature insertion is handled after generation.</p>
+<p>Saving appends a new message flagged <code>\Draft</code> into Gmail's special-use Drafts folder. Sending uses SMTP_SSL and the same reply construction. Both preserve In-Reply-To and References when the original has a Message-ID.</p>
+<h2 id="serving-and-build">Serving and build</h2>
+<p>Vite builds into ignored <code>frontend/dist</code>. FastAPI injects the process token into that build's HTML and serves bundled files from <code>/assets</code>. The server does not expose source files, <code>.venv</code>, model files, or arbitrary filesystem paths. <code>.htaccess</code> denies Apache access to the project.</p></article><footer>Reply Desk documentation · <a href="https://github.com/alizainappedology/reply-desk">View source on GitHub</a></footer></main>
+<aside class="on-page"><div class="section-label">ON THIS PAGE</div><div class="toc">
+<ul>
+<li><a href="#architecture">Architecture</a><ul>
+<li><a href="#components">Components</a></li>
+<li><a href="#source-map">Source map</a></li>
+<li><a href="#state-and-persistence">State and persistence</a></li>
+<li><a href="#mail-flow">Mail flow</a></li>
+<li><a href="#serving-and-build">Serving and build</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</aside></div><script src="site.js"></script></body></html>

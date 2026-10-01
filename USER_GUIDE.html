@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="Reply Desk documentation: User guide. Setup, email workflows, API, privacy and screenshots.">
+<title>User guide · Reply Desk Docs</title><link rel="stylesheet" href="site.css"></head>
+<body><header><a class="brand" href="index.html"><span class="mark">r.</span> replydesk <span class="docs-label">DOCS</span></a><a class="repo" href="https://github.com/alizainappedology/reply-desk">GitHub repository ↗</a></header>
+<div class="layout"><aside class="sidebar"><div class="section-label">DOCUMENTATION</div><label class="search"><span class="sr-only">Search guide titles</span><input id="search" type="search" placeholder="Find a guide…" autocomplete="off"></label><nav aria-label="Documentation"><a href="index.html" class="" data-guide="overview">Overview</a><a href="USER_GUIDE.html" class="active" data-guide="user guide">User guide</a><a href="SCREENSHOTS.html" class="" data-guide="screenshots">Screenshots</a><a href="ARCHITECTURE.html" class="" data-guide="architecture">Architecture</a><a href="API.html" class="" data-guide="api reference">API reference</a><a href="DEVELOPMENT.html" class="" data-guide="development">Development</a><a href="SECURITY.html" class="" data-guide="privacy &amp; security">Privacy &amp; security</a><a href="TROUBLESHOOTING.html" class="" data-guide="troubleshooting">Troubleshooting</a></nav><div class="local-note"><strong>Built for a calmer inbox.</strong><p>FastAPI · React · Local AI</p><span>Review every reply before sending.</span></div></aside>
+<main><div class="breadcrumb">Documentation <span>/</span> User guide</div><article><h1 id="user-guide">User guide</h1>
+<p><a href="index.html">Back to README</a></p>
+<h2 id="connect-your-account">Connect your account</h2>
+<ol>
+<li>Open http://127.0.0.1:8765/.</li>
+<li>Choose <strong>Account settings</strong> from the sidebar or top bar.</li>
+<li>Enter your Gmail address and a Google app password issued for that same account.</li>
+<li>Keep the local model set to <code>llama3.2:3b</code> and select <strong>Connect Gmail</strong>.</li>
+</ol>
+<p><img alt="Account settings with a placeholder email and empty password field" src="images/account-settings.png" /></p>
+<p>The password field clears after successful connection. Credentials remain in server memory. Disconnect explicitly to clear them. A server restart also clears them. Browser reload currently resets the visible connection state, so reconnect through settings when necessary.</p>
+<p><strong>Check local AI</strong> checks whether Ollama is running and the model is installed; it does not generate a reply.</p>
+<h2 id="profile-and-signature">Profile and signature</h2>
+<p>Expand <strong>Your profile and signature</strong> in account settings. Set your name, role, and preferred closing, then choose <strong>Save profile</strong>. Profile data is stored in your browser. Your saved signature is appended to generated replies; an explicitly requested exact-text response bypasses normal rewriting and signature insertion.</p>
+<h2 id="find-and-read-email">Find and read email</h2>
+<p>Expand <strong>Search &amp; filters</strong> in the Inbox panel. Search by sender or subject, use unread-only filtering, or choose date bounds. <strong>From date</strong> is inclusive; <strong>Before date</strong> is exclusive. Choose <strong>Search / refresh</strong> to apply filters. <strong>Clear filters</strong> resets them.</p>
+<p>Results contain up to 20 messages per page. Use <strong>Previous</strong> and <strong>Next</strong> for pagination. Select a message to view its body. Reading uses a read-only inbox and <code>BODY.PEEK[]</code>, so it does not mark the message as read.</p>
+<p><img alt="Desktop inbox and Reply studio" src="images/workspace.png" /></p>
+<h2 id="draft-a-reply">Draft a reply</h2>
+<p>Choose a tone, length, and reply intent in <strong>Reply studio</strong>, then add instructions. Useful examples:</p>
+<ul>
+<li><code>Approve the adjustment and thank him for working late.</code></li>
+<li><code>Politely decline and ask whether next week would work instead.</code></li>
+<li><code>Ask for the budget and deadline. Do not promise a delivery date.</code></li>
+</ul>
+<p>Choose <strong>Generate reply</strong>. The model uses the incoming message, selected options, your notes, and optional conversation context. Edit the result directly in <strong>Your reply</strong>.</p>
+<p>For literal output, use <code>Reply only with: Your exact text</code>, <code>Reply exactly with: Your exact text</code>, or <code>Say exactly: Your exact text</code>. Otherwise, rough notes are converted to an email response.</p>
+<p>AI behavior is probabilistic. Check whether the reply follows your decision and avoid sending invented facts, commitments, or deadlines.</p>
+<h2 id="conversation-and-summaries">Conversation and summaries</h2>
+<p><strong>View conversation</strong> reads up to six recent messages belonging to the Gmail thread from All Mail. All Mail must be visible to IMAP. The selected message remains the target for saving or sending.</p>
+<p>Leave <strong>Use conversation history when drafting</strong> enabled to include that context. If All Mail is unavailable, disable it to work from the selected email alone. Attachments are not read; HTML is reduced to plain text.</p>
+<p><strong>Summarize email</strong> produces Request, Deadlines, and Questions sections. It does not replace the editable reply. Verify the summary against the original email.</p>
+<h2 id="refine-and-regenerate">Refine and regenerate</h2>
+<p><strong>Generate reply</strong> creates another version using your current instructions. The previous nonempty draft is recorded before regeneration.</p>
+<p>Enter an editing instruction and choose <strong>Refine draft</strong>, or use <strong>Shorter</strong> or <strong>More polite</strong>. Refinement uses the current editable draft. Review the result for unintended changes to meaning.</p>
+<h2 id="batch-drafts">Batch drafts</h2>
+<p>Check up to ten inbox messages, choose the shared tone, length, intent, and notes, then select <strong>Draft selected</strong>. Previously stored notes for another selected message may be reused for that message; otherwise it uses the current notes.</p>
+<p>Processing is sequential. <strong>Stop after current</strong> finishes the active request before stopping the batch. Errors are reported per message. Open each email to inspect its prepared draft. Batch drafting does not save or send anything automatically.</p>
+<h2 id="versions-and-local-storage">Versions and local storage</h2>
+<p>Expand <strong>Draft versions for this email</strong> to restore a previous generated, refined, kept, saved, or sent version. <strong>Keep version</strong> records a manual edit. Restoring a version first keeps the current nonempty text.</p>
+<p>The browser retains current drafts and up to 200 versions per mailbox, keyed by account and IMAP UIDVALIDITY. <strong>Clear this mailbox's local history</strong> removes the browser's current drafts and versions for that mailbox. It does not delete messages or drafts in Gmail.</p>
+<h2 id="save-or-send">Save or send</h2>
+<p><strong>Save to Gmail Drafts</strong> creates a new Gmail draft with reply headers. It does not update a previously saved Gmail draft. Saving the same unchanged text again is disabled in the interface.</p>
+<p><strong>Send reply now</strong> shows a confirmation with the recipient, subject, and edited text. Cancel leaves the email unsent. Confirm sends through Gmail SMTP. The recipient is the original Reply-To address when present, otherwise From. This is a single-recipient reply, not reply-all.</p>
+<p>Gmail draft saving and direct sending are separate actions. Sending does not remove any earlier Gmail draft.</p>
+<p>If a save times out, inspect Gmail Drafts before retrying. If sending cannot be confirmed, inspect Gmail Sent before trying another send. History records confirmed sending, but is not proof that a recipient read the email.</p>
+<h2 id="mobile-layout">Mobile layout</h2>
+<p>Navigation and the inbox stack above Reply studio on small screens. See the <a href="SCREENSHOTS.html#mobile-layout">mobile screenshot</a>.</p></article><footer>Reply Desk documentation · <a href="https://github.com/alizainappedology/reply-desk">View source on GitHub</a></footer></main>
+<aside class="on-page"><div class="section-label">ON THIS PAGE</div><div class="toc">
+<ul>
+<li><a href="#user-guide">User guide</a><ul>
+<li><a href="#connect-your-account">Connect your account</a></li>
+<li><a href="#profile-and-signature">Profile and signature</a></li>
+<li><a href="#find-and-read-email">Find and read email</a></li>
+<li><a href="#draft-a-reply">Draft a reply</a></li>
+<li><a href="#conversation-and-summaries">Conversation and summaries</a></li>
+<li><a href="#refine-and-regenerate">Refine and regenerate</a></li>
+<li><a href="#batch-drafts">Batch drafts</a></li>
+<li><a href="#versions-and-local-storage">Versions and local storage</a></li>
+<li><a href="#save-or-send">Save or send</a></li>
+<li><a href="#mobile-layout">Mobile layout</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</aside></div><script src="site.js"></script></body></html>

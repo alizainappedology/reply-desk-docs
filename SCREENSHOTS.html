@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="Reply Desk documentation: Screenshots. Setup, email workflows, API, privacy and screenshots.">
+<title>Screenshots · Reply Desk Docs</title><link rel="stylesheet" href="site.css"></head>
+<body><header><a class="brand" href="index.html"><span class="mark">r.</span> replydesk <span class="docs-label">DOCS</span></a><a class="repo" href="https://github.com/alizainappedology/reply-desk">GitHub repository ↗</a></header>
+<div class="layout"><aside class="sidebar"><div class="section-label">DOCUMENTATION</div><label class="search"><span class="sr-only">Search guide titles</span><input id="search" type="search" placeholder="Find a guide…" autocomplete="off"></label><nav aria-label="Documentation"><a href="index.html" class="" data-guide="overview">Overview</a><a href="USER_GUIDE.html" class="" data-guide="user guide">User guide</a><a href="SCREENSHOTS.html" class="active" data-guide="screenshots">Screenshots</a><a href="ARCHITECTURE.html" class="" data-guide="architecture">Architecture</a><a href="API.html" class="" data-guide="api reference">API reference</a><a href="DEVELOPMENT.html" class="" data-guide="development">Development</a><a href="SECURITY.html" class="" data-guide="privacy &amp; security">Privacy &amp; security</a><a href="TROUBLESHOOTING.html" class="" data-guide="troubleshooting">Troubleshooting</a></nav><div class="local-note"><strong>Built for a calmer inbox.</strong><p>FastAPI · React · Local AI</p><span>Review every reply before sending.</span></div></aside>
+<main><div class="breadcrumb">Documentation <span>/</span> Screenshots</div><article><h1 id="interface-screenshots">Interface screenshots</h1>
+<p><a href="index.html">Back to README</a> · <a href="USER_GUIDE.html">User guide</a></p>
+<p>These screenshots were captured from the running React/FastAPI app in a fresh, unconnected browser session. The account-settings screenshot uses <code>you@example.com</code>; its password field is empty. No mailbox access or email sending was performed.</p>
+<h2 id="desktop-workspace">Desktop workspace</h2>
+<p>Sidebar navigation, the Inbox panel, and Reply studio with generation, refinement, draft saving, and sending controls. Empty-state controls are disabled until a message is selected.</p>
+<p><img alt="Desktop workspace" src="images/workspace.png" /></p>
+<h2 id="account-settings">Account settings</h2>
+<p>Open Account settings from the top bar or sidebar to connect Gmail and configure your profile and signature.</p>
+<p><img alt="Account settings" src="images/account-settings.png" /></p>
+<h2 id="mobile-layout">Mobile layout</h2>
+<p>At a 390-pixel viewport, navigation becomes compact and the inbox and reply editor stack vertically.</p>
+<p><img src="images/mobile.png" alt="Reply Desk mobile layout at a 390-pixel viewport" width="390" /></p>
+<h2 id="refreshing-screenshots">Refreshing screenshots</h2>
+<p>Build and start the app first. In <code>frontend</code>, install the optional capture dependency without changing the package manifest:</p>
+<pre><code class="language-powershell">
+npm install --no-save --package-lock=false playwright
+
+</code></pre>
+<p>From the project root:</p>
+<pre><code class="language-powershell">
+node tools/capture-screenshots.mjs
+
+</code></pre>
+<p>The script uses a fresh browser context and the installed Microsoft Edge executable on Windows. To choose another compatible browser executable, set <code>DOCS_BROWSER_PATH</code> for this command. It writes images to <code>docs/images</code>. Check every image for private information before committing it. The optional capture tool is not required to run the application; <code>npm ci</code> restores the normal frontend dependency set.</p></article><footer>Reply Desk documentation · <a href="https://github.com/alizainappedology/reply-desk">View source on GitHub</a></footer></main>
+<aside class="on-page"><div class="section-label">ON THIS PAGE</div><div class="toc">
+<ul>
+<li><a href="#interface-screenshots">Interface screenshots</a><ul>
+<li><a href="#desktop-workspace">Desktop workspace</a></li>
+<li><a href="#account-settings">Account settings</a></li>
+<li><a href="#mobile-layout">Mobile layout</a></li>
+<li><a href="#refreshing-screenshots">Refreshing screenshots</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</aside></div><script src="site.js"></script></body></html>

@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="Reply Desk documentation: Privacy &amp; security. Setup, email workflows, API, privacy and screenshots.">
+<title>Privacy &amp; security · Reply Desk Docs</title><link rel="stylesheet" href="site.css"></head>
+<body><header><a class="brand" href="index.html"><span class="mark">r.</span> replydesk <span class="docs-label">DOCS</span></a><a class="repo" href="https://github.com/alizainappedology/reply-desk">GitHub repository ↗</a></header>
+<div class="layout"><aside class="sidebar"><div class="section-label">DOCUMENTATION</div><label class="search"><span class="sr-only">Search guide titles</span><input id="search" type="search" placeholder="Find a guide…" autocomplete="off"></label><nav aria-label="Documentation"><a href="index.html" class="" data-guide="overview">Overview</a><a href="USER_GUIDE.html" class="" data-guide="user guide">User guide</a><a href="SCREENSHOTS.html" class="" data-guide="screenshots">Screenshots</a><a href="ARCHITECTURE.html" class="" data-guide="architecture">Architecture</a><a href="API.html" class="" data-guide="api reference">API reference</a><a href="DEVELOPMENT.html" class="" data-guide="development">Development</a><a href="SECURITY.html" class="active" data-guide="privacy &amp; security">Privacy &amp; security</a><a href="TROUBLESHOOTING.html" class="" data-guide="troubleshooting">Troubleshooting</a></nav><div class="local-note"><strong>Built for a calmer inbox.</strong><p>FastAPI · React · Local AI</p><span>Review every reply before sending.</span></div></aside>
+<main><div class="breadcrumb">Documentation <span>/</span> Privacy &amp; security</div><article><h1 id="privacy-and-security">Privacy and security</h1>
+<p><a href="index.html">Back to README</a></p>
+<h2 id="supported-boundary">Supported boundary</h2>
+<p>Reply Desk is a single-user local app. FastAPI binds to <code>127.0.0.1:8765</code>; the supplied Ollama startup binds to <code>127.0.0.1:11434</code>. Do not expose it through public tunnels, a shared LAN interface, or a public reverse proxy without redesigning authentication and account isolation.</p>
+<p>Host validation and a per-process request token protect local requests, but they are not user authentication. Another process or user with access to the same computer can potentially access local services or browser storage.</p>
+<h2 id="credentials">Credentials</h2>
+<p>Gmail app passwords are entered through account settings and held in the backend's <code>CONFIG</code> memory. They are never written to the app's browser persistence or intentionally logged. The password field clears after successful connection. Disconnect or stop the backend to clear the stored configuration.</p>
+<p>Python strings are not explicitly memory-zeroed; clearing the configuration is not a guarantee against memory inspection. The app uses an app password, not OAuth. The app password must be issued for the connected account. Replace credentials exposed through chats, screenshots, commits, or other unintended locations.</p>
+<h2 id="email-and-ai-data">Email and AI data</h2>
+<p>Gmail connections use TLS IMAP and SMTP. AI requests use the loopback Ollama chat endpoint. The selected message and optional bounded thread context are processed locally, not sent to a paid cloud model.</p>
+<p>When the supplied script starts Ollama, it disables cloud functionality. If it reuses an existing Ollama process, that process's configuration is retained. The app's generation model is restricted to <code>llama3.2:3b</code>.</p>
+<p>Email and conversation content are treated as untrusted prompt context. React renders content as text, not executable email HTML. These measures reduce prompt injection and browser execution risks, but a local model can still make mistakes or follow malicious content incorrectly. Review its output.</p>
+<h2 id="browser-persistence">Browser persistence</h2>
+<p>Profile, current drafts, version history, and send-request metadata are stored in localStorage as readable JSON. This data is not encrypted by the application and is accessible to users or software with access to that browser profile.</p>
+<p>History is scoped to mailbox/UIDVALIDITY and capped at 200 versions per mailbox. Disconnect does not remove browser history. Clear local history in the UI or clear the site's browser data to remove it. Clearing browser history does not delete Gmail messages or drafts. Profile is stored separately and may require clearing site data for complete removal.</p>
+<h2 id="sending-and-duplicate-prevention">Sending and duplicate prevention</h2>
+<p>Sending requires explicit UI confirmation and server validation of the recipient, confirmation flag, and request ID. The server records attempted IDs before calling SMTP and rejects a repeat during that process lifetime.</p>
+<p>This is not a durable exactly-once guarantee. A timeout can occur after Gmail accepted a message. A restart clears attempt tracking, and a different ID can send another copy. Inspect Gmail Sent before retrying ambiguous results. Saving creates new drafts; sending does not delete an earlier draft.</p>
+<p>Batch generation does not send automatically. There is no scheduled sending or background inbox polling.</p>
+<h2 id="file-access-and-responses">File access and responses</h2>
+<p>Only the React build and <code>/assets</code> are served. The server sets no-store caching, nosniff, and a content security policy restricting scripts to the same origin and preventing framing. POST bodies are checked against a 128,000-byte limit after reading them. Apache access is denied by the project's <code>.htaccess</code> when supported by the Apache configuration.</p>
+<p>Repository ignores exclude credentials files, runtimes, model downloads, dependency directories, caches, and preview artifacts. Ignore rules are not a substitute for inspecting staged changes.</p>
+<h2 id="reporting-a-problem">Reporting a problem</h2>
+<p>Report a minimal reproduction to the repository owner without including app passwords, tokens, private message bodies, or recipient addresses. For credential exposure, revoke the affected password first. This repository currently has no dedicated private vulnerability reporting workflow.</p></article><footer>Reply Desk documentation · <a href="https://github.com/alizainappedology/reply-desk">View source on GitHub</a></footer></main>
+<aside class="on-page"><div class="section-label">ON THIS PAGE</div><div class="toc">
+<ul>
+<li><a href="#privacy-and-security">Privacy and security</a><ul>
+<li><a href="#supported-boundary">Supported boundary</a></li>
+<li><a href="#credentials">Credentials</a></li>
+<li><a href="#email-and-ai-data">Email and AI data</a></li>
+<li><a href="#browser-persistence">Browser persistence</a></li>
+<li><a href="#sending-and-duplicate-prevention">Sending and duplicate prevention</a></li>
+<li><a href="#file-access-and-responses">File access and responses</a></li>
+<li><a href="#reporting-a-problem">Reporting a problem</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</aside></div><script src="site.js"></script></body></html>

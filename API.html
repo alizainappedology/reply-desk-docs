@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="Reply Desk documentation: API reference. Setup, email workflows, API, privacy and screenshots.">
+<title>API reference · Reply Desk Docs</title><link rel="stylesheet" href="site.css"></head>
+<body><header><a class="brand" href="index.html"><span class="mark">r.</span> replydesk <span class="docs-label">DOCS</span></a><a class="repo" href="https://github.com/alizainappedology/reply-desk">GitHub repository ↗</a></header>
+<div class="layout"><aside class="sidebar"><div class="section-label">DOCUMENTATION</div><label class="search"><span class="sr-only">Search guide titles</span><input id="search" type="search" placeholder="Find a guide…" autocomplete="off"></label><nav aria-label="Documentation"><a href="index.html" class="" data-guide="overview">Overview</a><a href="USER_GUIDE.html" class="" data-guide="user guide">User guide</a><a href="SCREENSHOTS.html" class="" data-guide="screenshots">Screenshots</a><a href="ARCHITECTURE.html" class="" data-guide="architecture">Architecture</a><a href="API.html" class="active" data-guide="api reference">API reference</a><a href="DEVELOPMENT.html" class="" data-guide="development">Development</a><a href="SECURITY.html" class="" data-guide="privacy &amp; security">Privacy &amp; security</a><a href="TROUBLESHOOTING.html" class="" data-guide="troubleshooting">Troubleshooting</a></nav><div class="local-note"><strong>Built for a calmer inbox.</strong><p>FastAPI · React · Local AI</p><span>Review every reply before sending.</span></div></aside>
+<main><div class="breadcrumb">Documentation <span>/</span> API reference</div><article><h1 id="api-reference">API reference</h1>
+<p><a href="index.html">Back to README</a></p>
+<p>Base URL: <code>http://127.0.0.1:8765</code>. All API operations use <strong>POST</strong> with a JSON object. Production frontend and API share the same origin.</p>
+<h2 id="request-contract">Request contract</h2>
+<p>Supply <code>Content-Type: application/json</code> and <code>X-App-Token: &lt;process-token&gt;</code>. The token is in the served HTML's <code>meta[name="app-token"]</code>. It changes on server restart. Only Host values <code>127.0.0.1:8765</code> and <code>localhost:8765</code> are accepted. POST bodies must contain 1–128,000 bytes.</p>
+<p>This token is local request protection, not a multi-user authentication system. Never send credentials to a public endpoint.</p>
+<h2 id="routes">Routes</h2>
+<table>
+<thead>
+<tr>
+<th>Route</th>
+<th>Request</th>
+<th>Successful response</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>/api/ai-status</code></td>
+<td><code>{}</code></td>
+<td><code>{ "ready": true, "message": "..." }</code></td>
+</tr>
+<tr>
+<td><code>/api/connect</code></td>
+<td><code>email</code>, <code>password</code>, <code>model</code></td>
+<td><code>{ "ok": true }</code></td>
+</tr>
+<tr>
+<td><code>/api/disconnect</code></td>
+<td><code>{}</code></td>
+<td><code>{ "ok": true }</code></td>
+</tr>
+<tr>
+<td><code>/api/inbox</code></td>
+<td>Optional filters below</td>
+<td><code>messages</code>, <code>total</code>, <code>offset</code>, <code>mailbox</code></td>
+</tr>
+<tr>
+<td><code>/api/thread</code></td>
+<td><code>uid</code></td>
+<td><code>{ "messages": [...] }</code></td>
+</tr>
+<tr>
+<td><code>/api/draft</code></td>
+<td><code>uid</code>, optional drafting fields</td>
+<td><code>{ "draft": "..." }</code></td>
+</tr>
+<tr>
+<td><code>/api/refine</code></td>
+<td><code>uid</code>, <code>body</code>, <code>refinement</code>, optional drafting fields</td>
+<td><code>{ "draft": "..." }</code></td>
+</tr>
+<tr>
+<td><code>/api/summary</code></td>
+<td><code>uid</code>, optional drafting fields</td>
+<td><code>{ "draft": "summary text" }</code></td>
+</tr>
+<tr>
+<td><code>/api/save</code></td>
+<td><code>uid</code>, nonempty <code>body</code></td>
+<td><code>{ "recipient": "..." }</code></td>
+</tr>
+<tr>
+<td><code>/api/send</code></td>
+<td><code>uid</code>, nonempty <code>body</code>, <code>recipient</code>, <code>confirmed</code>, <code>request_id</code></td>
+<td><code>{ "recipient": "...", "sent": true }</code></td>
+</tr>
+</tbody>
+</table>
+<p>AI status, connection, and disconnection do not require an already connected Gmail account. All other operations do.</p>
+<h3 id="connect">Connect</h3>
+<pre><code class="language-json">{
+  &quot;email&quot;: &quot;you@example.com&quot;,
+  &quot;password&quot;: &quot;your-google-app-password&quot;,
+  &quot;model&quot;: &quot;llama3.2:3b&quot;
+}
+</code></pre>
+<p>The model currently supports only <code>llama3.2:3b</code> for generation. Connection validates the Gmail login before replacing the stored credentials. The password is not returned.</p>
+<h3 id="inbox-filters">Inbox filters</h3>
+<pre><code class="language-json">{
+  &quot;sender&quot;: &quot;colleague@example.com&quot;,
+  &quot;subject&quot;: &quot;project&quot;,
+  &quot;unread&quot;: true,
+  &quot;after&quot;: &quot;2026-09-01&quot;,
+  &quot;before&quot;: &quot;2026-10-01&quot;,
+  &quot;offset&quot;: 0
+}
+</code></pre>
+<p>Dates are <code>YYYY-MM-DD</code>; after maps to inclusive SINCE and before to exclusive BEFORE. Offset is the number of results to skip. Results are newest UID first, with 20 items per page. UID order is mailbox arrival order, not a sort of the message Date header.</p>
+<p>Messages contain <code>uid</code>, <code>sender</code>, <code>reply_to</code>, <code>subject</code>, <code>date</code>, and bounded plain-text <code>body</code>. The <code>mailbox</code> value namespaces local draft history and should be treated as opaque.</p>
+<h3 id="drafting-fields">Drafting fields</h3>
+<pre><code class="language-json">{
+  &quot;uid&quot;: &quot;123&quot;,
+  &quot;notes&quot;: &quot;Thank them and ask for the deadline.&quot;,
+  &quot;tone&quot;: &quot;Professional&quot;,
+  &quot;length&quot;: &quot;Short&quot;,
+  &quot;intent&quot;: &quot;Custom&quot;,
+  &quot;thread&quot;: true,
+  &quot;profile&quot;: {
+    &quot;name&quot;: &quot;Your Name&quot;,
+    &quot;role&quot;: &quot;Your Role&quot;,
+    &quot;signature&quot;: &quot;Best regards,\nYour Name&quot;
+  }
+}
+</code></pre>
+<ul>
+<li>Tone: <code>Professional</code>, <code>Friendly</code>, <code>Firm</code>, <code>Casual</code>.</li>
+<li>Length: <code>Short</code>, <code>Detailed</code>.</li>
+<li>Intent: <code>Custom</code>, <code>Approve</code>, <code>Decline</code>, <code>Ask for details</code>, <code>Acknowledge</code>.</li>
+<li><code>thread</code> defaults to true. Set false when All Mail is unavailable or context is unwanted.</li>
+<li>Owner notes are bounded to 4,000 characters. Refinement drafts are bounded to 12,000 and refinement instructions to 2,000. Each profile field is bounded to 1,500.</li>
+</ul>
+<p>Refinement adds <code>body</code> and <code>refinement</code> to these fields. Summary returns its output under <code>draft</code> for frontend compatibility; it does not send mail.</p>
+<h3 id="confirmed-send">Confirmed send</h3>
+<pre><code class="language-json">{
+  &quot;uid&quot;: &quot;123&quot;,
+  &quot;body&quot;: &quot;The reviewed reply text.&quot;,
+  &quot;recipient&quot;: &quot;sender@example.com&quot;,
+  &quot;confirmed&quot;: true,
+  &quot;request_id&quot;: &quot;12345678-1234-1234-1234-123456789abc&quot;
+}
+</code></pre>
+<p>The server recomputes the reply address and rejects a mismatching recipient or absent confirmation. The UI creates a UUID request ID and reuses it for the same text if a request is retried. The server records attempted IDs per account before sending. Reusing an attempted ID is rejected, including after an uncertain outcome. This tracking lasts only for the current process; inspect Gmail Sent before retrying uncertain sends.</p>
+<h2 id="errors">Errors</h2>
+<p>Errors generally return <code>{ "error": "human-readable message" }</code>:</p>
+<ul>
+<li><strong>400</strong>: malformed JSON, missing values, invalid UID/options, authentication or mailbox failure, rejected confirmation, repeated send ID, or an uncertain send outcome.</li>
+<li><strong>403</strong>: invalid Host or absent/stale request token.</li>
+<li><strong>404</strong>: unmatched operation.</li>
+<li><strong>502</strong>: other local AI or connection failures.</li>
+</ul>
+<p>Some locally caught AI errors are returned as 400 because they are represented as ValueError; clients should use the error message rather than infer all causes from the status code. Framework-level errors on unknown URLs may use FastAPI's <code>detail</code> format.</p>
+<p>GET <code>/</code> serves React HTML, with 503 when the production build is missing. GET <code>/assets/...</code> serves only built frontend assets. Interactive <code>/docs</code> and <code>/redoc</code> are disabled. This guide is the supported route reference.</p></article><footer>Reply Desk documentation · <a href="https://github.com/alizainappedology/reply-desk">View source on GitHub</a></footer></main>
+<aside class="on-page"><div class="section-label">ON THIS PAGE</div><div class="toc">
+<ul>
+<li><a href="#api-reference">API reference</a><ul>
+<li><a href="#request-contract">Request contract</a></li>
+<li><a href="#routes">Routes</a><ul>
+<li><a href="#connect">Connect</a></li>
+<li><a href="#inbox-filters">Inbox filters</a></li>
+<li><a href="#drafting-fields">Drafting fields</a></li>
+<li><a href="#confirmed-send">Confirmed send</a></li>
+</ul>
+</li>
+<li><a href="#errors">Errors</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</aside></div><script src="site.js"></script></body></html>
